@@ -5,6 +5,7 @@ import { LogOut, User } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -43,6 +44,7 @@ export function Header({ user }: HeaderProps) {
       <SidebarTrigger />
       <Separator orientation="vertical" className="h-4" />
       <div className="flex-1" />
+      <ThemeToggle />
       <DropdownMenu>
         <DropdownMenuTrigger className="flex items-center gap-2 rounded-md p-1 hover:bg-accent transition-colors">
           <Avatar className="h-8 w-8">
