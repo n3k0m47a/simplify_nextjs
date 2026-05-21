@@ -1,4 +1,5 @@
 import { relations } from "drizzle-orm";
+import { avatar } from "./pogo.schema";
 import {
   mysqlTable,
   varchar,
@@ -88,6 +89,7 @@ export const verification = mysqlTable(
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
+  avatars: many(avatar),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -100,6 +102,13 @@ export const sessionRelations = relations(session, ({ one }) => ({
 export const accountRelations = relations(account, ({ one }) => ({
   user: one(user, {
     fields: [account.userId],
+    references: [user.id],
+  }),
+}));
+
+export const avatarRelations = relations(avatar, ({ one }) => ({
+  user: one(user, {
+    fields: [avatar.userId],
     references: [user.id],
   }),
 }));

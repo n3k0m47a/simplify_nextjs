@@ -1,0 +1,1 @@
+ALTER TABLE `pogo_avatar_luckydex` MODIFY COLUMN `luckydex_id` int NOT NULL;

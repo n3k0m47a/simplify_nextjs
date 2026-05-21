@@ -15,6 +15,48 @@
       "when": 1779303883185,
       "tag": "0001_stale_blockbuster",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1779362200287,
+      "tag": "0002_moaning_bulldozer",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1779363289480,
+      "tag": "0003_classy_stephen_strange",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1779363595499,
+      "tag": "0004_slim_shadow_king",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1779364521865,
+      "tag": "0005_icy_war_machine",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1779366020117,
+      "tag": "0006_unique_wind_dancer",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1779369562639,
+      "tag": "0007_peaceful_union_jack",
+      "breakpoints": true
     }
   ]
 }
