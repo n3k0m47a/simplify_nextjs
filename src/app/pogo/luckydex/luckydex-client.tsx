@@ -46,6 +46,35 @@ const FILTER_OPTIONS = [
   { value: 'xxl', label: 'xxl', hint: 'XXL' },
 ] as const
 
+function formatNosAsRanges(nos: number[]): string {
+  if (nos.length === 0) return ''
+  const sorted = [...new Set(nos)].sort((a, b) => a - b)
+  const parts: string[] = []
+  let start = sorted[0]
+  let end = sorted[0]
+
+  function flush() {
+    if (end - start >= 2) {
+      parts.push(`${start}-${end}`)
+    } else {
+      for (let n = start; n <= end; n++) parts.push(String(n))
+    }
+  }
+
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i] === end + 1) {
+      end = sorted[i]
+    } else {
+      flush()
+      start = sorted[i]
+      end = sorted[i]
+    }
+  }
+  flush()
+
+  return parts.join(',')
+}
+
 function buildString(nos: string, filters: string[], excludeFilters: string[]): string {
   const parts = [...filters, ...excludeFilters.map((f) => `!${f}`)]
   if (nos) parts.push(nos)
@@ -151,28 +180,35 @@ function SearchStringDialog({
   const [selectedAvatarId, setSelectedAvatarId] = useState(avatars[0]?.id)
   const [selectedFilters, setSelectedFilters] = useState<string[]>([])
   const [excludeFilters, setExcludeFilters] = useState<string[]>([])
+  const [onlyTrade, setOnlyTrade] = useState(false)
+
+  const filteredPokedex = useMemo(
+    () => (onlyTrade ? pokedex.filter((p) => p.trade) : pokedex),
+    [pokedex, onlyTrade]
+  )
 
   const luckyNos = useMemo(() => {
     const map = new Map<number, Set<number>>()
     for (const av of avatars) {
-      map.set(av.id, new Set(pokedex.filter((p) => luckySet.has(`${av.id}-${p.id}`)).map((p) => p.pokemonNo)))
+      map.set(av.id, new Set(filteredPokedex.filter((p) => luckySet.has(`${av.id}-${p.id}`)).map((p) => p.pokemonNo)))
     }
     return map
-  }, [luckySet, pokedex, avatars])
+  }, [luckySet, filteredPokedex, avatars])
 
   const { missingNos, inOtherNos } = useMemo(() => {
     if (!selectedAvatarId) return { missingNos: '', inOtherNos: '' }
     const thisLucky = luckyNos.get(selectedAvatarId) ?? new Set<number>()
     const otherAvatars = avatars.filter((av) => av.id !== selectedAvatarId)
 
-    const missing = pokedex.filter((p) => !thisLucky.has(p.pokemonNo)).map((p) => p.pokemonNo).join(',')
-    const inOther = pokedex
-      .filter((p) => thisLucky.has(p.pokemonNo) && otherAvatars.some((av) => luckyNos.get(av.id)?.has(p.pokemonNo)))
-      .map((p) => p.pokemonNo)
-      .join(',')
+    const missing = formatNosAsRanges(filteredPokedex.filter((p) => !thisLucky.has(p.pokemonNo)).map((p) => p.pokemonNo))
+    const inOther = formatNosAsRanges(
+      filteredPokedex
+        .filter((p) => thisLucky.has(p.pokemonNo) && otherAvatars.some((av) => luckyNos.get(av.id)?.has(p.pokemonNo)))
+        .map((p) => p.pokemonNo)
+    )
 
     return { missingNos: missing, inOtherNos: inOther }
-  }, [selectedAvatarId, luckyNos, pokedex, avatars])
+  }, [selectedAvatarId, luckyNos, filteredPokedex, avatars])
 
   const missingString = buildString(missingNos, selectedFilters, excludeFilters)
   const inOtherString = buildString(inOtherNos, selectedFilters, excludeFilters)
@@ -205,6 +241,15 @@ function SearchStringDialog({
             </select>
             <FilterDropdown label="Enthält" selected={selectedFilters} onChange={setSelectedFilters} />
             <FilterDropdown label="Ohne" selected={excludeFilters} onChange={setExcludeFilters} />
+            <label className="flex cursor-pointer items-center gap-1.5 text-sm select-none">
+              <input
+                type="checkbox"
+                checked={onlyTrade}
+                onChange={(e) => setOnlyTrade(e.target.checked)}
+                className="accent-primary h-3.5 w-3.5"
+              />
+              <span className="text-xs">Nur trade=1</span>
+            </label>
             <Button
               type="button"
               variant="outline"
@@ -212,6 +257,7 @@ function SearchStringDialog({
               onClick={() => {
                 setSelectedFilters([])
                 setExcludeFilters([])
+                setOnlyTrade(false)
               }}
             >
               Zurücksetzen
