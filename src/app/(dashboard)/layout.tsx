@@ -17,7 +17,7 @@ export default async function DashboardLayout({
 
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar role={session.user.role} />
       <div className="flex flex-1 flex-col min-h-svh">
         <Header user={session.user} />
         <main className="flex-1 p-6">{children}</main>

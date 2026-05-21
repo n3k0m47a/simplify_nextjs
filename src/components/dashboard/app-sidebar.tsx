@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LayoutDashboard } from "lucide-react";
+import { LayoutDashboard, Users } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -12,11 +12,14 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-const navItems = [
-  { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-];
+export function AppSidebar({ role }: { role?: string | null }) {
+  const navItems = [
+    { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    ...(role === "admin"
+      ? [{ title: "Benutzer", href: "/users", icon: Users }]
+      : []),
+  ];
 
-export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="px-4 py-3">
