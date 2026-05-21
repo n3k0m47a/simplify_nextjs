@@ -37,11 +37,19 @@ export function RegisterForm() {
     defaultValues: { name: "", email: "", password: "" },
     onSubmit: async ({ value }) => {
       setServerError(null);
-      const { error } = await authClient.signUp.email(value);
-      if (error) {
-        setServerError(error.message ?? "Registrierung fehlgeschlagen.");
-      } else {
-        router.push("/dashboard");
+      try {
+        const { error } = await authClient.signUp.email(value);
+        if (error) {
+          setServerError(error.message ?? "Registrierung fehlgeschlagen.");
+        } else {
+          router.push("/dashboard");
+        }
+      } catch (error) {
+        setServerError(
+          error instanceof Error
+            ? error.message
+            : "Registrierung fehlgeschlagen."
+        );
       }
     },
   });

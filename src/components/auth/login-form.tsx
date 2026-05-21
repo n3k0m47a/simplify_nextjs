@@ -37,11 +37,19 @@ export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
     defaultValues: { email: "", password: "" },
     onSubmit: async ({ value }) => {
       setServerError(null);
-      const { error } = await authClient.signIn.email(value);
-      if (error) {
-        setServerError(error.message ?? "Anmeldung fehlgeschlagen.");
-      } else {
-        router.push(getSafeRedirect(callbackUrl));
+      try {
+        const { error } = await authClient.signIn.email(value);
+        if (error) {
+          setServerError(error.message ?? "Anmeldung fehlgeschlagen.");
+        } else {
+          router.push(getSafeRedirect(callbackUrl));
+        }
+      } catch (error) {
+        setServerError(
+          error instanceof Error
+            ? error.message
+            : "Anmeldung fehlgeschlagen."
+        );
       }
     },
   });
