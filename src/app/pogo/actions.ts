@@ -57,7 +57,7 @@ export async function getLuckydex() {
   const luckyEntries =
     avatars.length > 0
       ? await db
-          .select({ avatarId: lucky.avatarId, pokedexId: lucky.pokedexId })
+          .select({ avatarId: lucky.avatarId, pokedexId: lucky.pokedexId, updatedAt: lucky.updatedAt, createdAt: lucky.createdAt })
           .from(lucky)
           .innerJoin(avatar, eq(lucky.avatarId, avatar.id))
           .where(
