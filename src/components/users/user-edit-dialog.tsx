@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { updateUser } from "@/app/(dashboard)/users/actions";
+import { updateUser } from "@/app/(backend)/users/actions";
 import type { AdminUser } from "@/components/users/users-table";
 
 export function UserEditDialog({

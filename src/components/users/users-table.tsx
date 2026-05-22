@@ -21,7 +21,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { banUser, unbanUser } from "@/app/(dashboard)/users/actions";
+import { banUser, unbanUser } from "@/app/(backend)/users/actions";
 import { UserEditDialog } from "@/components/users/user-edit-dialog";
 import { UserDeleteDialog } from "@/components/users/user-delete-dialog";
 

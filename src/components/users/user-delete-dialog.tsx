@@ -11,7 +11,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { deleteUser } from "@/app/(dashboard)/users/actions";
+import { deleteUser } from "@/app/(backend)/users/actions";
 import type { AdminUser } from "@/components/users/users-table";
 
 export function UserDeleteDialog({

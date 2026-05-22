@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LayoutDashboard, Users } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, House } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -14,9 +14,13 @@ import {
 
 export function AppSidebar({ role }: { role?: string | null }) {
   const navItems = [
+    { title: "Home", href: "/", icon: House },
     { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     ...(role === "admin"
-      ? [{ title: "Benutzer", href: "/users", icon: Users }]
+      ? [
+          { title: "Benutzer", href: "/users", icon: Users },
+          { title: "Pokédex", href: "/pokedex", icon: BookOpen },
+        ]
       : []),
   ];
 
