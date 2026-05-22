@@ -13,7 +13,8 @@ export const metadata: Metadata = {
 };
 
 export default async function DashboardPage() {
-  const session = (await getSession())!;
+  const session = await getSession();
+  if (!session) return null;
 
   return (
     <div className="flex flex-col gap-6">

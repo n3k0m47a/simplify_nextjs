@@ -5,8 +5,13 @@ import { nextCookies } from "better-auth/next-js";
 import { db } from "@/db";
 import { user, session, account, verification } from "@/db/schema";
 
-const authUrl = process.env.NEXT_PUBLIC_AUTH_URL ?? process.env.NEXTAUTH_URL;
-const baseURL = authUrl?.replace(/\/$/, "") ? `${authUrl.replace(/\/$/, "")}/api/auth` : undefined;
+const authUrl =
+  process.env.BETTER_AUTH_URL ??
+  process.env.NEXT_PUBLIC_AUTH_URL ??
+  process.env.NEXTAUTH_URL;
+const baseURL = authUrl?.replace(/\/$/, "")
+  ? `${authUrl.replace(/\/$/, "")}/api/auth`
+  : undefined;
 
 export const auth = betterAuth({
   baseURL,

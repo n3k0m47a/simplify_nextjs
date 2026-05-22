@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { LogOut, User } from "lucide-react";
+import { ChevronDown, LogOut, User } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
@@ -46,13 +46,18 @@ export function Header({ user }: HeaderProps) {
       <div className="flex-1" />
       <ThemeToggle />
       <DropdownMenu>
-        <DropdownMenuTrigger className="flex items-center gap-2 rounded-md p-1 hover:bg-accent transition-colors">
-          <Avatar className="h-8 w-8">
+        <DropdownMenuTrigger className="flex items-center gap-2 rounded-md px-2 py-1 hover:bg-accent transition-colors outline-none">
+          <Avatar className="h-8 w-8 shrink-0">
             <AvatarFallback className="text-xs">{initials}</AvatarFallback>
           </Avatar>
+          <div className="hidden sm:flex flex-col items-start text-left leading-tight">
+            <span className="text-sm font-medium">{user.name}</span>
+            <span className="text-xs text-muted-foreground">{user.email}</span>
+          </div>
+          <ChevronDown className="hidden sm:block size-4 shrink-0 text-muted-foreground" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuGroup>
+          <DropdownMenuGroup className="sm:hidden">
             <DropdownMenuLabel>
               <div className="flex flex-col gap-0.5">
                 <span className="font-medium">{user.name}</span>
@@ -62,7 +67,7 @@ export function Header({ user }: HeaderProps) {
               </div>
             </DropdownMenuLabel>
           </DropdownMenuGroup>
-          <DropdownMenuSeparator />
+          <DropdownMenuSeparator className="sm:hidden" />
           <DropdownMenuItem className="text-muted-foreground" disabled>
             <User className="mr-2 h-4 w-4" />
             Profil

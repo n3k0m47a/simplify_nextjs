@@ -34,10 +34,12 @@ type BoolFields = Pick<
 
 export function PokedexEditSheet({
   entry,
+  parentName,
   open,
   onClose,
 }: {
   entry: Pokedex;
+  parentName?: string;
   open: boolean;
   onClose: () => void;
 }) {
@@ -94,6 +96,12 @@ export function PokedexEditSheet({
           <SheetTitle>Pokémon bearbeiten</SheetTitle>
           <p className="text-sm text-muted-foreground">
             #{entry.pokemonNo} · {entry.name}
+            {entry.parentId != null && (
+              <>
+                {" "}
+                · Parent: {parentName ?? `#${entry.parentId}`}
+              </>
+            )}
           </p>
         </SheetHeader>
 

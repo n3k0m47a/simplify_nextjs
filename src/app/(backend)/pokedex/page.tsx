@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { getSession } from "@/lib/session";
-import { getPokedexEntries } from "@/app/(backend)/pokedex/actions";
-import { PokedexTable } from "@/components/pokedex/pokedex-table";
+import { getPokedexEntries, getDistinctForms } from "@/app/(backend)/pokedex/actions";
+import { PokedexAdmin } from "@/components/pokedex/pokedex-admin";
 
 export const metadata: Metadata = { title: "Pokédex-Verwaltung" };
 
@@ -15,6 +15,7 @@ export default async function PokedexAdminPage({
     search?: string;
     page?: string;
     form?: string;
+    generation?: string;
     baby?: string;
     legendary?: string;
     mythical?: string;
@@ -24,6 +25,8 @@ export default async function PokedexAdminPage({
     regional?: string;
     notTradeable?: string;
     trade?: string;
+    view?: string;
+    family?: string;
   }>;
 }) {
   const session = await getSession();
@@ -35,6 +38,7 @@ export default async function PokedexAdminPage({
     search,
     page: pageParam,
     form,
+    generation: generationParam,
     baby,
     legendary,
     mythical,
@@ -44,7 +48,18 @@ export default async function PokedexAdminPage({
     regional,
     notTradeable,
     trade,
+    view: viewParam,
+    family: familyParam,
   } = await searchParams;
+  const generations = generationParam
+    ? generationParam
+        .split(",")
+        .map((g) => Number(g))
+        .filter((g) => !Number.isNaN(g))
+    : [];
+  const forms = form ? form.split(",").filter(Boolean) : [];
+  const view = viewParam === "cards" ? "cards" : "table";
+  const familyMode = view === "cards" && familyParam === "1";
   const page = Math.max(1, Number(pageParam ?? 1));
   const offset = (page - 1) * PAGE_SIZE;
 
@@ -66,21 +81,26 @@ export default async function PokedexAdminPage({
     trade: parseState(trade),
   } as const;
 
-  const { entries, total } = await getPokedexEntries({
-    limit: PAGE_SIZE,
-    offset,
-    search,
-    form,
-    baby: boolFilters.baby === "neutral" ? undefined : boolFilters.baby,
-    legendary: boolFilters.legendary === "neutral" ? undefined : boolFilters.legendary,
-    mythical: boolFilters.mythical === "neutral" ? undefined : boolFilters.mythical,
-    ultraBeast: boolFilters.ultraBeast === "neutral" ? undefined : boolFilters.ultraBeast,
-    released: boolFilters.released === "neutral" ? undefined : boolFilters.released,
-    exclusive: boolFilters.exclusive === "neutral" ? undefined : boolFilters.exclusive,
-    regional: boolFilters.regional === "neutral" ? undefined : boolFilters.regional,
-    notTradeable: boolFilters.notTradeable === "neutral" ? undefined : boolFilters.notTradeable,
-    trade: boolFilters.trade === "neutral" ? undefined : boolFilters.trade,
-  });
+  const [{ entries, total }, distinctForms] = await Promise.all([
+    getPokedexEntries({
+      unpaginated: familyMode,
+      limit: PAGE_SIZE,
+      offset: familyMode ? 0 : offset,
+      search,
+      forms,
+      generations,
+      baby: boolFilters.baby === "neutral" ? undefined : boolFilters.baby,
+      legendary: boolFilters.legendary === "neutral" ? undefined : boolFilters.legendary,
+      mythical: boolFilters.mythical === "neutral" ? undefined : boolFilters.mythical,
+      ultraBeast: boolFilters.ultraBeast === "neutral" ? undefined : boolFilters.ultraBeast,
+      released: boolFilters.released === "neutral" ? undefined : boolFilters.released,
+      exclusive: boolFilters.exclusive === "neutral" ? undefined : boolFilters.exclusive,
+      regional: boolFilters.regional === "neutral" ? undefined : boolFilters.regional,
+      notTradeable: boolFilters.notTradeable === "neutral" ? undefined : boolFilters.notTradeable,
+      trade: boolFilters.trade === "neutral" ? undefined : boolFilters.trade,
+    }),
+    getDistinctForms(),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -90,14 +110,18 @@ export default async function PokedexAdminPage({
           {total} {total === 1 ? "Eintrag" : "Einträge"} gesamt
         </p>
       </div>
-      <PokedexTable
+      <PokedexAdmin
         entries={entries}
         total={total}
         page={page}
         pageSize={PAGE_SIZE}
         search={search ?? ""}
-        form={form ?? ""}
+        forms={forms}
+        distinctForms={distinctForms}
+        generations={generations}
         boolFilters={boolFilters}
+        view={view}
+        familyMode={familyMode}
       />
     </div>
   );
