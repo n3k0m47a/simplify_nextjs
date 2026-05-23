@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq, and, isNull, count, sql, gte } from "drizzle-orm";
 import { db } from "@/db";
 import { avatar, pokedex, lucky } from "@/db/schema";
 import { getSession } from "@/lib/session";
@@ -18,6 +18,44 @@ export async function getAvatars() {
     .select()
     .from(avatar)
     .where(and(eq(avatar.userId, session.user.id), isNull(avatar.deletedAt)));
+}
+
+export async function getAvatarsWithLuckyCount() {
+  const session = await getSession();
+  if (!session) return [];
+
+  const rows = await db
+    .select({ id: avatar.id, name: avatar.name, luckyCount: count(lucky.id) })
+    .from(avatar)
+    .leftJoin(lucky, and(eq(lucky.avatarId, avatar.id), isNull(lucky.deletedAt)))
+    .where(and(eq(avatar.userId, session.user.id), isNull(avatar.deletedAt)))
+    .groupBy(avatar.id, avatar.name);
+
+  return rows;
+}
+
+export async function getLuckyPerDay() {
+  const session = await getSession();
+  if (!session) return [];
+
+  const since = new Date();
+  since.setDate(since.getDate() - 59);
+  since.setHours(0, 0, 0, 0);
+
+  const rows = await db
+    .select({
+      date: sql<string>`DATE_FORMAT(${lucky.createdAt}, '%Y-%m-%d')`.as("date"),
+      avatarId: avatar.id,
+      avatarName: avatar.name,
+      luckyCount: count(lucky.id),
+    })
+    .from(lucky)
+    .innerJoin(avatar, eq(lucky.avatarId, avatar.id))
+    .where(and(eq(avatar.userId, session.user.id), isNull(lucky.deletedAt), gte(lucky.createdAt, since)))
+    .groupBy(sql`DATE(${lucky.createdAt})`, avatar.id, avatar.name)
+    .orderBy(sql`DATE(${lucky.createdAt})`);
+
+  return rows;
 }
 
 export async function createAvatar(name: string) {
