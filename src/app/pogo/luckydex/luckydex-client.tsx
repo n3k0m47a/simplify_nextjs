@@ -9,7 +9,9 @@ import {
   type ColumnDef,
   type SortingState,
 } from "@tanstack/react-table";
+import Image from "next/image";
 import { Copy, Check, ChevronDown, Wand2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,6 +22,21 @@ import {
 } from "@/components/ui/dialog";
 import { toggleLucky } from "../actions";
 import type { Avatar, Pokedex } from "@/db/schema";
+
+const BOOL_COLUMNS = [
+  { key: 'baby' as const,         label: 'Baby' },
+  { key: 'legendary' as const,    label: 'Legendär' },
+  { key: 'mythical' as const,     label: 'Mysteriös' },
+  { key: 'ultraBeast' as const,   label: 'Ultra Beast' },
+  { key: 'released' as const,     label: 'Freigegeben' },
+  { key: 'exclusive' as const,    label: 'Exklusiv' },
+  { key: 'regional' as const,     label: 'Regional' },
+  { key: 'notTradeable' as const, label: 'Nicht handelbar' },
+  { key: 'trade' as const,        label: 'Trade' },
+]
+
+type BoolColumnKey = (typeof BOOL_COLUMNS)[number]['key']
+type BoolFilterState = Partial<Record<BoolColumnKey, boolean>>
 
 const FILTER_OPTIONS = [
   { value: 'schillernd', label: 'schillernd', hint: 'Shiny' },
@@ -156,6 +173,166 @@ function FilterDropdown({
             <button
               type="button"
               onClick={() => onChange([])}
+              className="text-muted-foreground hover:text-foreground mt-1 w-full rounded px-2 py-1 text-left text-xs"
+            >
+              Auswahl zurücksetzen
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function BoolFilterDropdown({
+  value,
+  onChange,
+}: {
+  value: BoolFilterState
+  onChange: (v: BoolFilterState) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+
+  const activeCount = Object.keys(value).length
+
+  const setFilter = (key: BoolColumnKey, val: boolean | null) => {
+    const next = { ...value }
+    if (val === null) delete next[key]
+    else next[key] = val
+    onChange(next)
+  }
+
+  return (
+    <div ref={ref} className="relative">
+      <Button type="button" variant="outline" size="sm" onClick={() => setOpen((o) => !o)} className="gap-1">
+        Eigenschaften{activeCount > 0 ? ` (${activeCount})` : ''}
+        <ChevronDown className="h-3.5 w-3.5" />
+      </Button>
+      {open && (
+        <div className="bg-popover border-border absolute top-full left-0 z-50 mt-1 w-64 rounded-md border p-2 shadow-md">
+          <div className="grid gap-1">
+            {BOOL_COLUMNS.map(({ key, label }) => {
+              const current = key in value ? value[key] : null
+              return (
+                <div key={key} className="flex items-center justify-between gap-2 px-1 py-0.5">
+                  <span className="text-sm">{label}</span>
+                  <div className="flex overflow-hidden rounded-md border text-xs">
+                    {([null, true, false] as const).map((val) => {
+                      const active = current === val
+                      const btnLabel = val === null ? 'Alle' : val ? 'Ja' : 'Nein'
+                      return (
+                        <button
+                          key={String(val)}
+                          type="button"
+                          onClick={() => setFilter(key, val)}
+                          className={`px-2 py-0.5 transition-colors ${active ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+                        >
+                          {btnLabel}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          {activeCount > 0 && (
+            <button
+              type="button"
+              onClick={() => onChange({})}
+              className="text-muted-foreground hover:text-foreground mt-1 w-full rounded px-2 py-1 text-left text-xs"
+            >
+              Auswahl zurücksetzen
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+type FormFilterState = Record<string, boolean>
+
+function FormFilterDropdown({
+  options,
+  value,
+  onChange,
+}: {
+  options: string[]
+  value: FormFilterState
+  onChange: (v: FormFilterState) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+
+  const activeCount = Object.keys(value).length
+
+  const setFilter = (key: string, val: boolean | null) => {
+    const next = { ...value }
+    if (val === null) delete next[key]
+    else next[key] = val
+    onChange(next)
+  }
+
+  if (options.length === 0) return null
+
+  return (
+    <div ref={ref} className="relative">
+      <Button type="button" variant="outline" size="sm" onClick={() => setOpen((o) => !o)} className="gap-1">
+        Form{activeCount > 0 ? ` (${activeCount})` : ''}
+        <ChevronDown className="h-3.5 w-3.5" />
+      </Button>
+      {open && (
+        <div className="bg-popover border-border absolute top-full left-0 z-50 mt-1 w-64 overflow-y-auto rounded-md border p-2 shadow-md">
+          <div className="grid gap-1">
+            {options.map((opt) => {
+              const current = opt in value ? value[opt] : null
+              return (
+                <div key={opt} className="flex items-center justify-between gap-2 px-1 py-0.5">
+                  <span className="text-sm">{opt}</span>
+                  <div className="flex overflow-hidden rounded-md border text-xs">
+                    {([null, true, false] as const).map((val) => {
+                      const active = current === val
+                      const btnLabel = val === null ? 'Alle' : val ? 'Ja' : 'Nein'
+                      return (
+                        <button
+                          key={String(val)}
+                          type="button"
+                          onClick={() => setFilter(opt, val)}
+                          className={`px-2 py-0.5 transition-colors ${active ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+                        >
+                          {btnLabel}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          {activeCount > 0 && (
+            <button
+              type="button"
+              onClick={() => onChange({})}
               className="text-muted-foreground hover:text-foreground mt-1 w-full rounded px-2 py-1 text-left text-xs"
             >
               Auswahl zurücksetzen
@@ -343,6 +520,13 @@ export function LuckydexClient({ pokedex, avatars, luckyEntries }: Props) {
   const [search, setSearch] = useState("");
   const [sorting, setSorting] = useState<SortingState>([{ id: "pokemonNo", desc: false }]);
   const [onlyIncomplete, setOnlyIncomplete] = useState(false);
+  const [boolFilters, setBoolFilters] = useState<BoolFilterState>({});
+  const [formFilter, setFormFilter] = useState<FormFilterState>({});
+
+  const formOptions = useMemo(
+    () => [...new Set(pokedex.map((p) => p.form).filter((f): f is string => f !== null && f !== ''))].sort(),
+    [pokedex],
+  );
 
   const lastLuckyChange = useMemo(() => {
     const map = new Map<number, Date>();
@@ -354,6 +538,14 @@ export function LuckydexClient({ pokedex, avatars, luckyEntries }: Props) {
     }
     return map;
   }, [luckyEntries]);
+
+  const [sortLastLuckyChange, setSortLastLuckyChange] = useState(() => lastLuckyChange);
+  const sortDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (sortDebounceRef.current) clearTimeout(sortDebounceRef.current);
+    sortDebounceRef.current = setTimeout(() => setSortLastLuckyChange(lastLuckyChange), 800);
+    return () => { if (sortDebounceRef.current) clearTimeout(sortDebounceRef.current); };
+  }, [lastLuckyChange]);
 
   const displayData = useMemo(() => {
     const terms = search
@@ -372,6 +564,19 @@ export function LuckydexClient({ pokedex, avatars, luckyEntries }: Props) {
       );
     }
 
+    for (const [key, val] of Object.entries(boolFilters) as [BoolColumnKey, boolean][]) {
+      result = result.filter((p) => Boolean(p[key]) === val);
+    }
+
+    const includeForms = Object.entries(formFilter).filter(([, v]) => v === true).map(([k]) => k)
+    const excludeForms = Object.entries(formFilter).filter(([, v]) => v === false).map(([k]) => k)
+    if (includeForms.length > 0) {
+      result = result.filter((p) => p.form !== null && includeForms.includes(p.form))
+    }
+    for (const form of excludeForms) {
+      result = result.filter((p) => p.form !== form)
+    }
+
     if (onlyIncomplete && avatars.length > 0) {
       result = result.filter((p) =>
         avatars.some((av) => !luckySet.has(`${av.id}-${p.id}`)),
@@ -379,13 +584,37 @@ export function LuckydexClient({ pokedex, avatars, luckyEntries }: Props) {
     }
 
     return result;
-  }, [pokedex, search, onlyIncomplete, avatars, luckySet]);
+  }, [pokedex, search, boolFilters, formFilter, onlyIncomplete, avatars, luckySet]);
+
+  const handleToggle = useCallback((avatarId: number, pokedexId: number) => {
+    const key = `${avatarId}-${pokedexId}`;
+    const wasLucky = luckySet.has(key);
+    setLuckySet((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+    startTransition(async () => {
+      try {
+        await toggleLucky(avatarId, pokedexId);
+      } catch {
+        setLuckySet((prev) => {
+          const next = new Set(prev);
+          if (wasLucky) next.add(key);
+          else next.delete(key);
+          return next;
+        });
+        toast.error("Speichern fehlgeschlagen");
+      }
+    });
+  }, [luckySet, startTransition]);
 
   const columns = useMemo<ColumnDef<Pokedex>[]>(() => {
     const base: ColumnDef<Pokedex>[] = [
       {
         id: "lastChange",
-        accessorFn: (row) => lastLuckyChange.get(row.id)?.getTime() ?? 0,
+        accessorFn: (row) => sortLastLuckyChange.get(row.id)?.getTime() ?? 0,
         header: "",
         enableHiding: true,
       },
@@ -416,9 +645,36 @@ export function LuckydexClient({ pokedex, avatars, luckyEntries }: Props) {
             <SortIcon sorted={column.getIsSorted()} />
           </button>
         ),
-        cell: ({ getValue }) => (
-          <span className="font-medium">{getValue<string>()}</span>
-        ),
+        cell: ({ row }) => {
+          const p = row.original;
+          const isAllLucky =
+            avatars.length > 0 &&
+            avatars.every((av) => luckySet.has(`${av.id}-${p.id}`));
+          const imgSrc = p.src ? `/images/pogo/${p.src}` : "/images/pogo/";
+          return (
+            <div className="flex items-center gap-2">
+              <div
+                className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                  isAllLucky
+                    ? "bg-amber-400/30 ring-2 ring-amber-400 shadow-[0_0_8px_2px_--theme(--color-amber-400/40%)]"
+                    : "bg-muted/40"
+                }`}
+              >
+                <Image
+                  src={imgSrc}
+                  alt={p.name}
+                  width={28}
+                  height={28}
+                  className="object-contain"
+                  style={{ width: "auto", height: "auto" }}
+                />
+              </div>
+              <span className={`font-medium ${isAllLucky ? "text-amber-500" : ""}`}>
+                {p.name}
+              </span>
+            </div>
+          );
+        },
       },
       ...avatars.map<ColumnDef<Pokedex>>((av) => ({
         id: `avatar-${av.id}`,
@@ -448,8 +704,7 @@ export function LuckydexClient({ pokedex, avatars, luckyEntries }: Props) {
       })),
     ];
     return base;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [avatars, luckySet]);
+  }, [avatars, luckySet, sortLastLuckyChange, handleToggle]);
 
   const table = useReactTable({
     data: displayData,
@@ -459,19 +714,6 @@ export function LuckydexClient({ pokedex, avatars, luckyEntries }: Props) {
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
-
-  function handleToggle(avatarId: number, pokedexId: number) {
-    const key = `${avatarId}-${pokedexId}`;
-    setLuckySet((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-    startTransition(async () => {
-      await toggleLucky(avatarId, pokedexId);
-    });
-  }
 
   const isLastChangeSorting = sorting.length === 1 && sorting[0].id === "lastChange";
 
@@ -506,6 +748,8 @@ export function LuckydexClient({ pokedex, avatars, luckyEntries }: Props) {
         >
           Zuletzt geändert
         </button>
+        <BoolFilterDropdown value={boolFilters} onChange={setBoolFilters} />
+        <FormFilterDropdown options={formOptions} value={formFilter} onChange={setFormFilter} />
         {avatars.length > 0 && (
           <button
             onClick={() => setOnlyIncomplete((v) => !v)}
